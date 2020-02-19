@@ -12,8 +12,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.HashMap;
 import javax.imageio.ImageIO;
 
 /**
@@ -29,6 +28,11 @@ public class VentanaPokedex extends javax.swing.JFrame {
     Statement estado;
     ResultSet resultadoConsulta;
     Connection conexion;
+    
+    //estructura para guardar todo el contenido de la base de datos
+    //de golpe
+    HashMap<String, Pokemon> listaPokemons = new HashMap();
+    
     
     
     @Override
@@ -61,10 +65,27 @@ public class VentanaPokedex extends javax.swing.JFrame {
         try{
             Class.forName("com.mysql.jdbc.Driver");
             conexion = DriverManager
-                    .getConnection("jdbc:mysql://127.0.0.1/test",
+                    .getConnection("jdbc:mysql://192.168.71.134/pokemon",
                             "root",
                             "");
             estado = conexion.createStatement();
+            resultadoConsulta = estado.executeQuery("Select * from pokemon");
+            //recorremos el array del resultado uno a uno
+            //para ir cargandolo en el Hashmap
+            
+            while (resultadoConsulta.next()){
+                Pokemon p = new Pokemon();
+                p.nombre = resultadoConsulta.getString("nombre");
+                p.especie = resultadoConsulta.getString("especie");
+                p.movimiento1 = resultadoConsulta.getString("movimiento1");
+                p.peso = resultadoConsulta.getString("peso");
+                p.preEvolucion = resultadoConsulta.getInt("preEvolucion");
+                p.posEvolucion = resultadoConsulta.getInt("posEvolucion");
+                
+                listaPokemons.put(resultadoConsulta.getString("id"), p);
+                
+            }
+            
         }
         catch (Exception e){
             System.out.println(e.getMessage());
@@ -174,32 +195,40 @@ public class VentanaPokedex extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void izqActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_izqActionPerformed
-        contador --;
-        if (contador <=0){
-            contador = 1;
+         dibujaElPokemonQueEstaEnLaPosicion(contador);
+        
+        Pokemon p = listaPokemons.get(String.valueOf(contador+1));
+        if (p != null){
+            nombrePokemon.setText(p.nombre);
         }
-        dibujaElPokemonQueEstaEnLaPosicion(contador);
+        else{
+            nombrePokemon.setText("NO HAY DATOS");
+            
+        }
+        contador ++;
+        if (contador <=0){
+            contador = 0;
+        }
+            
     }//GEN-LAST:event_izqActionPerformed
 
     private void derActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_derActionPerformed
 
+            
         dibujaElPokemonQueEstaEnLaPosicion(contador);
         
-        try {
-            resultadoConsulta = estado.executeQuery("select * from pokemon where id=" + (contador+1));
-            if (resultadoConsulta.next()){
-                nombrePokemon.setText(resultadoConsulta.getString(2));
-            }
-            else{
-                nombrePokemon.setText("Este pokemon no figura en la pokedex");
-            }
-        } catch (SQLException ex) {
+        Pokemon p = listaPokemons.get(String.valueOf(contador+1));
+        if (p != null){
+            nombrePokemon.setText(p.nombre);
+        }
+        else{
+            nombrePokemon.setText("NO HAY DATOS");
+            
         }
         contador ++;
         if (contador >=649){
             contador = 649;
         }
-        
     }//GEN-LAST:event_derActionPerformed
 
     /**
